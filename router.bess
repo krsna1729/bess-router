@@ -1,14 +1,17 @@
 # vim: syntax=py
 
-from pyroute2 import IPRoute
-ip = IPRoute()
+from pyroute2 import IPDB
+ipdb = IPDB()
 
 def ip_by_interface(name):
-    return ip.get_addr(label=name)[0].get_attr('IFA_ADDRESS')
+    return ipdb.interfaces[name]['ipaddr'].ipv4[0]['address']
 
-from scapy.all import get_if_hwaddr
 def mac_by_interface(name):
-    return int(get_if_hwaddr(name).replace(':', ''), 16)
+    return int(ipdb.interfaces[name]['address'].replace(':', ''), 16)
+
+def peer_by_interface(name):
+    peer_idx = ipdb.interfaces[name]['link']
+    return ipdb.interfaces[peer_idx]['ifname']
 
 import socket
 def aton(ip):
@@ -25,8 +28,7 @@ ifname = 'foo' #$IFNAME!'NULL'
 #    sys.exit(1)
 print('Setting up port {}'.format(ifname))
 
-# TODO: Get iface using peer index
-intf_kern = PMDPort(name="intf_kern", vdev="net_af_packet0,iface={}-vdev".format(ifname))
+intf_kern = PMDPort(name="intf_kern", vdev="net_af_packet0,iface={}".format(peer_by_interface(ifname)))
 intf_dpdk = PMDPort(name="intf_dpdk", port_id=0)
 
 # ====================================================
