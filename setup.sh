@@ -3,7 +3,7 @@
 docker stop bess
 
 docker run --name bess -itd --rm --cap-add NET_ADMIN \
---device=/dev/vfio/48 --device=/dev/vfio/49 --device=/dev/vfio/vfio \
+--device=/dev/vfio/48 --device=/dev/vfio/vfio \
 --ulimit memlock=-1 -v /dev/hugepages:/dev/hugepages \
 -v $(pwd):/conf \
 ngick8stesting/ngic-bessd-ctl:pkgs bessd -f
