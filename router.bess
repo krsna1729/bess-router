@@ -14,10 +14,11 @@ def aton(ip):
 #       Port Setup
 # ====================================================
 
-#if $IFNAME is none:
-#    print 'need a port name. e.g., IFNAME="eth0"'
-#    return
-ifname = 'foo' #$IFNAME
+#import sys
+ifname = 'foo' #$IFNAME!'NULL'
+#if ifname is 'NULL':
+#    print('need a port name. e.g., IFNAME="eth0"')
+#    sys.exit(1)
 print('Setting up port {}'.format(ifname))
 
 intf_kern = PMDPort(name="intf_kern", vdev="net_af_packet0,iface={}-vdev".format(ifname))
