@@ -1,5 +1,19 @@
 # vim: syntax=py
 
+import sys
+def exit(code, msg):
+    print(msg)
+    sys.exit(code)
+
+import os
+def get_env(varname):
+    try:
+        var = os.environ[varname]
+    except KeyError:
+        exit(1, 'Empty env var {}'.format(varname))
+    else:
+        return var
+
 from pyroute2 import IPDB
 ipdb = IPDB()
 
@@ -9,9 +23,15 @@ def ip_by_interface(name):
 def mac_by_interface(name):
     return int(ipdb.interfaces[name]['address'].replace(':', ''), 16)
 
+import sys
 def peer_by_interface(name):
-    peer_idx = ipdb.interfaces[name]['link']
-    return ipdb.interfaces[peer_idx]['ifname']
+    try:
+        peer_idx = ipdb.interfaces[name]['link']
+        peer_name = ipdb.interfaces[peer_idx]['ifname']
+    except:
+        exit(2, 'veth interface {} does not exist'.format(name))
+    else:
+        return peer_name
 
 import socket
 def aton(ip):
@@ -21,14 +41,10 @@ def aton(ip):
 #       Port Setup
 # ====================================================
 
-#import sys
-ifname = 'foo' #$IFNAME!'NULL'
-#if ifname is 'NULL':
-#    print('need a port name. e.g., IFNAME="eth0"')
-#    sys.exit(1)
-print('Setting up port {}'.format(ifname))
-
-intf_kern = PMDPort(name="intf_kern", vdev="net_af_packet0,iface={}".format(peer_by_interface(ifname)))
+ifname = get_env('IFNAME')
+peer = peer_by_interface(ifname)
+print('Setting up for port {}'.format(ifname))
+intf_kern = PMDPort(name="intf_kern", vdev="net_af_packet0,iface={}".format(peer))
 intf_dpdk = PMDPort(name="intf_dpdk", port_id=0)
 
 # ====================================================
@@ -81,4 +97,3 @@ routes: 0 \
 
 # Add routes and update dst/src MAC accordingly
 # TODO - make this dynamic using pyroute2
-
