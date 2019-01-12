@@ -3,8 +3,12 @@
 from pyroute2 import IPRoute
 ip = IPRoute()
 
-def getip(name):
+def ip_by_interface(name):
     return ip.get_addr(label=name)[0].get_attr('IFA_ADDRESS')
+
+from scapy.all import get_if_hwaddr
+def mac_by_interface(name):
+    return int(get_if_hwaddr(name).replace(':', ''), 16)
 
 import socket
 def aton(ip):
@@ -21,6 +25,7 @@ ifname = 'foo' #$IFNAME!'NULL'
 #    sys.exit(1)
 print('Setting up port {}'.format(ifname))
 
+# TODO: Get iface using peer index
 intf_kern = PMDPort(name="intf_kern", vdev="net_af_packet0,iface={}-vdev".format(ifname))
 intf_dpdk = PMDPort(name="intf_dpdk", port_id=0)
 
@@ -47,7 +52,7 @@ intf_dpdk_out::PortOut(port=intf_dpdk.name)
 merge_intf_kern -> intf_kern_out
 intf_kern_in -> merge_intf_dpdk -> intf_dpdk_out
 
-router_ip = getip(ifname)
+router_ip = ip_by_interface(ifname)
 # Classify traffic
 #   1: ARP for me
 #   2: Any traffic destined to me
@@ -65,10 +70,11 @@ classify: 2 -> merge_intf_kern
 classify: 3 -> routes
 
 # Default route
+srcmac = mac_by_interface(ifname)
 routes.add(prefix='0.0.0.0', prefix_len=0, gate=0)
 routes: 0 \
     -> default_route::Update(fields=[{'offset': 0, 'size': 6, 'value': 0xdeadbeefdead},
-                                     {'offset': 6, 'size': 6, 'value': 0x1234567890ab}]) \
+                                     {'offset': 6, 'size': 6, 'value': srcmac}]) \
     -> merge_intf_dpdk
 
 # Add routes and update dst/src MAC accordingly
