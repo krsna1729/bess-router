@@ -6,7 +6,7 @@ docker run --name bess -itd --rm --cap-add NET_ADMIN \
 --device=/dev/vfio/48 --device=/dev/vfio/vfio \
 --ulimit memlock=-1 -v /dev/hugepages:/dev/hugepages \
 -v $(pwd):/conf \
-ngick8stesting/ngic-bessd-ctl:pkgs bessd -f
+krsna1729/bess-router bessd -f
 
 docker exec bess bash -c "
 ip link add foo type veth peer name foo-vdev;
