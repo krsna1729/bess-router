@@ -17,8 +17,8 @@ def get_env(varname):
 from pyroute2 import IPDB
 ipdb = IPDB()
 
-def ip_by_interface(name):
-    return ipdb.interfaces[name]['ipaddr'].ipv4[0]['address']
+def ips_by_interface(name):
+    return [ipobj[0] for ipobj in ipdb.interfaces[name]['ipaddr'].ipv4]
 
 def mac_by_interface(name):
     return int(ipdb.interfaces[name]['address'].replace(':', ''), 16)
@@ -71,22 +71,31 @@ merge_intf_kern -> intf_kern_out
 intf_kern_in -> merge_intf_dpdk -> intf_dpdk_out
 
 # TODO Make this is list of IPs to be an router
-router_ip = ip_by_interface(ifname)
+router_ips = ips_by_interface(ifname)
 # Classify traffic
-#   1: ARP for me
-#   2: Any traffic destined to me
-#   3: IP traffic to routed
-filter1 = {"priority": -1, "filter": "arp host {}".format(router_ip), "gate": 1}
-filter2 = {"priority": -2, "filter": "dst host {}".format(router_ip), "gate": 2}
-filter3 = {"priority": -3, "filter": "ip", "gate": 3}
+#   1: Any traffic destined to me
+#      tcpdump -i foo 'dst host 198.19.0.1 or 198.18.0.1' -d
+#      (000) ldh      [12]
+#      (001) jeq      #0x800           jt 2    jf 4
+#      (002) ld       [30]
+#      (003) jeq      #0xc6130001      jt 9    jf 8
+#      (004) jeq      #0x806           jt 6    jf 5
+#      (005) jeq      #0x8035          jt 6    jf 10
+#      (006) ld       [38]
+#      (007) jeq      #0xc6130001      jt 9    jf 8
+#      (008) jeq      #0xc6120001      jt 9    jf 10
+#      (009) ret      #262144
+#      (010) ret      #0
+#   2: IP traffic to routed
+filter1 = {"priority": -1, "filter": "dst host {}".format(router_ips[0]), "gate": 1}
+filter2 = {"priority": -2, "filter": "ip", "gate": 2}
 classify.clear()
-classify.add(filters=[filter1, filter2, filter3])
+classify.add(filters=[filter1, filter2])
 
 intf_dpdk_in -> classify
 classify: 0 -> Sink()
 classify: 1 -> merge_intf_kern
-classify: 2 -> merge_intf_kern
-classify: 3 -> routes
+classify: 2 -> routes
 
 # Default route
 srcmac = mac_by_interface(ifname)

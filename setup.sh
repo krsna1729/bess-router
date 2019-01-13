@@ -13,5 +13,6 @@ ip link add foo type veth peer name foo-vdev;
 ip link set foo up;
 ip link set foo-vdev up;
 ip addr add 198.18.0.1/30 dev foo;
+ip addr add 198.19.0.1/30 dev foo;
 ip route;
 "
