@@ -97,6 +97,20 @@ classify: 0 -> Sink()
 classify: 1 -> merge_intf_kern
 classify: 2 -> routes
 
+# ====================================================
+#       Scheduler config
+# ====================================================
+
+bess.add_tc('schedule_limit',
+            policy='rate_limit',
+            resource='count',
+            limit={'count': 1000})
+intf_kern_in.attach_task(parent='schedule_limit')
+
+# ====================================================
+#       Dynamic config
+# ====================================================
+
 # Default route
 srcmac = mac_by_interface(ifname)
 routes.add(prefix='0.0.0.0', prefix_len=0, gate=0)
