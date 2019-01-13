@@ -1,2 +1,2 @@
 FROM krsna1729/bess
-RUN pip install pyroute2
+RUN pip install --no-cache-dir pyroute2
