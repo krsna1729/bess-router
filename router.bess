@@ -67,10 +67,6 @@ intf_dpdk_out::PortOut(port=intf_dpdk.name)
 #       Processing pipeline
 # ====================================================
 
-merge_intf_kern -> intf_kern_out
-intf_kern_in -> merge_intf_dpdk -> intf_dpdk_out
-
-router_ips = ips_by_interface(ifname)
 # Classify traffic
 #   1: Any traffic destined to me
 #      tcpdump -i foo 'dst host 198.19.0.1 or 198.18.0.1' -d
@@ -85,7 +81,9 @@ router_ips = ips_by_interface(ifname)
 #      (008) jeq      #0xc6120001      jt 9    jf 10
 #      (009) ret      #262144
 #      (010) ret      #0
-#   2: IP traffic to routed
+#   2: IP traffic to be routed
+
+router_ips = ips_by_interface(ifname)
 filter1 = {"priority": -1,
            "filter": "dst host " + " or ".join(str(x) for x in router_ips), "gate": 1}
 filter2 = {"priority": -2, "filter": "ip", "gate": 2}
@@ -94,13 +92,16 @@ classify.add(filters=[filter1, filter2])
 
 intf_dpdk_in -> classify
 classify: 0 -> Sink()
-classify: 1 -> merge_intf_kern
+classify: 1 -> merge_intf_kern -> intf_kern_out
 classify: 2 -> routes
+
+intf_kern_in -> merge_intf_dpdk -> intf_dpdk_out
 
 # ====================================================
 #       Scheduler config
 # ====================================================
 
+# Limit scheduling slow path RX to 1000 times/second
 bess.add_tc('schedule_limit',
             policy='rate_limit',
             resource='count',
