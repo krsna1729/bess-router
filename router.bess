@@ -23,7 +23,6 @@ def ips_by_interface(name):
 def mac_by_interface(name):
     return int(ipdb.interfaces[name]['address'].replace(':', ''), 16)
 
-import sys
 def peer_by_interface(name):
     try:
         peer_idx = ipdb.interfaces[name]['link']
