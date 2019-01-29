@@ -3,10 +3,11 @@
 docker stop bess
 
 docker run --name bess -itd --rm --cap-add NET_ADMIN \
+--cpuset-cpus=12-13 \
 --device=/dev/vfio/48 --device=/dev/vfio/vfio \
 --ulimit memlock=-1 -v /dev/hugepages:/dev/hugepages \
 -v $(pwd):/conf \
-krsna1729/bess-router bessd -f
+krsna1729/bess-router
 
 docker exec bess bash -c "
 ip link add foo type veth peer name foo-vdev;
