@@ -40,7 +40,8 @@ def aton(ip):
 #       Core Setup
 # ====================================================
 
-bess.add_worker(wid=0, core=12)
+import psutil
+bess.add_worker(wid=0, core=int(psutil.Process().cpu_affinity()[0]))
 
 # ====================================================
 #       Port Setup
