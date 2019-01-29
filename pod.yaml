@@ -15,9 +15,7 @@ spec:
     env:
     - name: IFNAME
       value: foo
-    command: ["bessd"]
     args:
-      - -f
       - -grpc-url=0.0.0.0:10514
     livenessProbe:
       tcpSocket:

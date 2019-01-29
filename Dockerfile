@@ -6,4 +6,5 @@ RUN pip install --no-cache-dir psutil pyroute2
 FROM krsna1729/bess
 COPY --from=pip /usr/local/lib/python2.7/site-packages/psutil /usr/local/lib/python2.7/site-packages/psutil
 COPY --from=pip /usr/local/lib/python2.7/site-packages/pyroute2 /usr/local/lib/python2.7/site-packages/pyroute2
-CMD bessd -f
+COPY entrypoint.sh /entrypoint.sh
+ENTRYPOINT ["/entrypoint.sh"]
