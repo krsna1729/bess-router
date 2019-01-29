@@ -8,6 +8,9 @@ metadata:
     ]'
 spec:
   containers:
+  - name: net-tools
+    image: busybox
+    command: ["sleep", "86400"]
   - name: bess
     image: krsna1729/bess-router
     stdin: true
